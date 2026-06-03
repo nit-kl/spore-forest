@@ -9,15 +9,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Kosugi+Maru&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#fdf6e3; --ink-soft:#cfe3d6;
-    --gold:#ffd27d; --akari:#ffd24d; --chikara:#ff7a3c; --tokashi:#b464e6;
-    --panel:rgba(16,28,26,.7);
+    --ink:#f5ead8; --ink-soft:#9cb8a4;
+    --gold:#d89800; --akari:#d89800; --chikara:#d04818; --tokashi:#7020b0;
+    --panel:rgba(12,22,18,.82);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;height:100%;background:#10201c;overflow:hidden;
     font-family:'Kosugi Maru',sans-serif;color:var(--ink);}
   #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-    background:radial-gradient(120% 100% at 50% -10%,#2c4a44 0%,#10201c 75%);}
+    background:radial-gradient(120% 100% at 50% -10%,#243a34 0%,#0c1814 75%);}
   #stage{position:relative;width:96vw;height:90vh;max-width:1100px;border-radius:18px;overflow:hidden;
     box-shadow:0 24px 60px rgba(0,0,0,.5);}
   #stage canvas{display:block;width:100%;height:100%;cursor:pointer;}
@@ -42,7 +42,7 @@
     font-size:13px;color:var(--ink-soft);white-space:nowrap;pointer-events:none;
     border:1px solid rgba(255,255,255,.07);}
   #toast{position:absolute;left:50%;top:64px;transform:translateX(-50%) translateY(-8px);z-index:4;
-    background:rgba(255,210,125,.95);color:#3a2a12;font-family:'Mochiy Pop One';
+    background:rgba(220,150,40,.96);color:#2a1a08;font-family:'Mochiy Pop One';
     padding:8px 18px;border-radius:14px;font-size:14px;opacity:0;transition:.4s;pointer-events:none;
     box-shadow:0 8px 22px rgba(0,0,0,.3);}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -59,8 +59,8 @@
   .legend div{font-size:12px;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--ink-soft);}
   .legend .dot{width:20px;height:20px;}
   button.go{font-family:'Mochiy Pop One';font-size:17px;border:none;cursor:pointer;
-    padding:13px 34px;border-radius:999px;color:#3a2a12;
-    background:linear-gradient(180deg,#ffe2a0,#e8a94e);box-shadow:0 8px 20px rgba(232,169,78,.4);
+    padding:13px 34px;border-radius:999px;color:#2a1a08;
+    background:linear-gradient(180deg,#e8b040,#c87818);box-shadow:0 8px 20px rgba(180,110,20,.45);
     transition:transform .15s;}
   button.go:hover{transform:translateY(-2px) scale(1.03);}
 </style>
@@ -109,7 +109,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-const COL3={akari:0xffd24d,chikara:0xff7a3c,tokashi:0xb464e6};
+const COL3={akari:0xd89800,chikara:0xd04818,tokashi:0x7020b0};
 const stage=document.getElementById('stage');
 
 // ---------- renderer / scene ----------
@@ -119,12 +119,12 @@ renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.outputEncoding=THREE.sRGBEncoding;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.0;
+renderer.toneMappingExposure=1.12;
 stage.insertBefore(renderer.domElement,stage.firstChild);
 
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x9ec97f);
-scene.fog=new THREE.Fog(0xa9d189,85,235);
+scene.background=new THREE.Color(0x1a3216);
+scene.fog=new THREE.Fog(0x243820,85,235);
 
 const camera=new THREE.PerspectiveCamera(44,1,0.1,500);
 // orbit camera follows the spirit; drag rotates, wheel zooms
@@ -150,42 +150,44 @@ function resize(){
 window.addEventListener('resize',resize);
 
 // ---------- lights ----------
-scene.add(new THREE.HemisphereLight(0xdef0d4,0x5a7a44,0.62));
-scene.add(new THREE.AmbientLight(0xfff3df,0.22));
+scene.add(new THREE.HemisphereLight(0x5a8a50,0x142810,0.52));
+scene.add(new THREE.AmbientLight(0xc8b8a0,0.16));
 const sun=new THREE.DirectionalLight(0xfff0d0,1.05);
 sun.position.set(26,46,22);
 sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 const sc=sun.shadow.camera; sc.left=-110;sc.right=110;sc.top=110;sc.bottom=-110;sc.near=1;sc.far=300;
-sun.shadow.bias=-0.0004;
+sun.shadow.bias=-0.0018;
+sun.shadow.normalBias=0.02;
 scene.add(sun);
 
 // ---------- materials ----------
-const matStem=new THREE.MeshStandardMaterial({color:0xfbf0d8,roughness:0.85});
-const matEye=new THREE.MeshBasicMaterial({color:0x4a3525});
-const matCheek=new THREE.MeshBasicMaterial({color:0xff9a8a,transparent:true,opacity:0.55});
+const matStem=new THREE.MeshStandardMaterial({color:0xe8d4b0,roughness:0.85});
+const matEye=new THREE.MeshBasicMaterial({color:0x3a2818});
+const matCheek=new THREE.MeshBasicMaterial({color:0xe06050,transparent:true,opacity:0.65});
 const matSpot=new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.6});
 
 // ============ STATIC FOREST ============
-// ground
-const ground=new THREE.Mesh(
-  new THREE.CircleGeometry(170,72),
-  new THREE.MeshStandardMaterial({color:0x82bf45,roughness:1})
-);
-ground.rotation.x=-Math.PI/2; ground.receiveShadow=true;
+// ground (single base plane; patches sit above to avoid z-fighting)
+const groundMat=new THREE.MeshStandardMaterial({
+  color:0x284a18,roughness:1,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1
+});
+const ground=new THREE.Mesh(new THREE.CircleGeometry(170,72),groundMat);
+ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; ground.renderOrder=0;
 ground.userData={kind:'ground'};
 scene.add(ground);
-// floor beyond
-const floorOuter=new THREE.Mesh(new THREE.RingGeometry(160,320,48),
-  new THREE.MeshStandardMaterial({color:0x5f923c,roughness:1}));
-floorOuter.rotation.x=-Math.PI/2; floorOuter.position.y=-0.05; scene.add(floorOuter);
+// floor beyond (inner radius matches ground edge — no overlap)
+const floorOuter=new THREE.Mesh(new THREE.RingGeometry(170,320,48),
+  new THREE.MeshStandardMaterial({color:0x1a3812,roughness:1}));
+floorOuter.rotation.x=-Math.PI/2; floorOuter.position.y=-0.12; floorOuter.receiveShadow=true; scene.add(floorOuter);
 // soft grass colour patches
-for(let i=0;i<34;i++){
+const patchMatOpts={roughness:1,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2};
+for(let i=0;i<28;i++){
   const a=Math.random()*6.28, r=Math.random()*150;
   const p=new THREE.Mesh(new THREE.CircleGeometry(6+Math.random()*14,16),
-    new THREE.MeshStandardMaterial({color:Math.random()<0.5?0x9ccf5a:0x6fae3a,roughness:1}));
-  p.rotation.x=-Math.PI/2; p.position.set(Math.cos(a)*r,0.02,Math.sin(a)*r);
-  scene.add(p);
+    new THREE.MeshStandardMaterial({color:Math.random()<0.5?0x3a6828:0x2a5018,...patchMatOpts}));
+  p.rotation.x=-Math.PI/2; p.position.set(Math.cos(a)*r,0.18,Math.sin(a)*r);
+  p.renderOrder=1; scene.add(p);
 }
 
 function rnd(a,b){return a+Math.random()*(b-a);}
@@ -197,7 +199,7 @@ function buildTree(){
   const trunk=new THREE.Mesh(new THREE.CylinderGeometry(tr*0.7,tr,th,8),
     new THREE.MeshStandardMaterial({color:0x6b4a32,roughness:0.95}));
   trunk.position.y=th/2; trunk.castShadow=true; g.add(trunk);
-  const greens=[0x4f8a3e,0x5fa047,0x6cae4c,0x468038];
+  const greens=[0x1e4018,0x284a22,0x325828,0x183818];
   const layers=2+Math.floor(Math.random()*2);
   for(let i=0;i<layers;i++){
     const rad=rnd(4,6)-i*0.8;
@@ -224,17 +226,17 @@ for(let i=0;i<48;i++){
   const pick=Math.random();
   if(pick<0.45){
     const b=new THREE.Mesh(new THREE.IcosahedronGeometry(rnd(1.4,2.6),0),
-      new THREE.MeshStandardMaterial({color:0x5a9450,roughness:0.95,flatShading:true}));
+      new THREE.MeshStandardMaterial({color:0x284a24,roughness:0.95,flatShading:true}));
     b.position.set(x,rnd(0.8,1.4),z); b.castShadow=true; scene.add(b);
   } else if(pick<0.75){
     const k=new THREE.Mesh(new THREE.DodecahedronGeometry(rnd(0.8,1.8),0),
-      new THREE.MeshStandardMaterial({color:0xb0ada4,roughness:1,flatShading:true}));
+      new THREE.MeshStandardMaterial({color:0x7a7568,roughness:1,flatShading:true}));
     k.position.set(x,rnd(0.4,0.9),z); k.castShadow=true; k.rotation.set(Math.random(),Math.random(),Math.random()); scene.add(k);
   } else {
     const dm=new THREE.Group();
     const st=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.22,0.9,6),matStem); st.position.y=0.45; dm.add(st);
     const cap=new THREE.Mesh(new THREE.SphereGeometry(0.5,12,8,0,6.28,0,Math.PI*0.55),
-      new THREE.MeshStandardMaterial({color:0xd2604f,roughness:0.7})); cap.scale.y=0.7; cap.position.y=0.85; dm.add(cap);
+      new THREE.MeshStandardMaterial({color:0xb84038,roughness:0.7})); cap.scale.y=0.7; cap.position.y=0.85; dm.add(cap);
     dm.position.set(x,0,z); scene.add(dm);
   }
 }
@@ -254,7 +256,7 @@ function buildGrassTuft(x,z,scale,green){
   t.position.set(x,0,z); return t;
 }
 function buildFlora(){
-  const greens=[0x6cb24c,0x7ec455,0x5da041,0x8ace5f];
+  const greens=[0x325828,0x3a6828,0x284a20,0x406830];
   for(let i=0;i<120;i++){
     const edge=i<78, a=Math.random()*6.28, r=edge?rnd(55,150):rnd(8,52);
     scene.add(buildGrassTuft(Math.cos(a)*r,Math.sin(a)*r,edge?rnd(1.1,2.0):rnd(0.6,1.1),
@@ -264,28 +266,28 @@ function buildFlora(){
     const a=Math.random()*6.28,r=rnd(12,120), leaf=new THREE.Group();
     const sh=rnd(1.5,2.6);
     const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.1,sh,6),
-      new THREE.MeshStandardMaterial({color:0x5da041,roughness:0.8})); stem.position.y=sh/2; leaf.add(stem);
+      new THREE.MeshStandardMaterial({color:0x284a20,roughness:0.8})); stem.position.y=sh/2; leaf.add(stem);
     const pad=new THREE.Mesh(new THREE.CircleGeometry(rnd(1.0,1.8),18),
-      new THREE.MeshStandardMaterial({color:0x7ec455,roughness:0.75,side:THREE.DoubleSide}));
-    pad.position.y=sh; pad.rotation.x=-Math.PI/2+rnd(-0.3,0.3); leaf.add(pad);
-    leaf.position.set(Math.cos(a)*r,0,Math.sin(a)*r); scene.add(leaf);
+      new THREE.MeshStandardMaterial({color:0x3a6828,roughness:0.75,side:THREE.DoubleSide}));
+    pad.position.y=sh+0.08; pad.rotation.x=-Math.PI/2+rnd(-0.3,0.3); leaf.add(pad);
+    leaf.position.set(Math.cos(a)*r,0.12,Math.sin(a)*r); scene.add(leaf);
   }
   for(let i=0;i<16;i++){ // smooth pebbles
     const a=Math.random()*6.28,r=rnd(10,130);
     const p=new THREE.Mesh(new THREE.IcosahedronGeometry(rnd(1.0,2.2),1),
-      new THREE.MeshStandardMaterial({color:0xc4bdb0,roughness:0.6}));
+      new THREE.MeshStandardMaterial({color:0x8a8478,roughness:0.6}));
     p.position.set(Math.cos(a)*r,rnd(0.3,0.7),Math.sin(a)*r); p.scale.y=0.6; p.castShadow=true; scene.add(p);
   }
   for(let i=0;i<44;i++){ // fallen petals
     const a=Math.random()*6.28,r=rnd(6,130);
     const pet=new THREE.Mesh(new THREE.CircleGeometry(rnd(0.3,0.6),10),
-      new THREE.MeshStandardMaterial({color:Math.random()<0.5?0xffc2dd:0xfff4f8,roughness:0.7,side:THREE.DoubleSide}));
-    pet.rotation.x=-Math.PI/2; pet.rotation.z=Math.random()*6.28; pet.position.set(Math.cos(a)*r,0.05,Math.sin(a)*r); scene.add(pet);
+      new THREE.MeshStandardMaterial({color:Math.random()<0.5?0xd06088:0xe8c8d0,roughness:0.7,side:THREE.DoubleSide}));
+    pet.rotation.x=-Math.PI/2; pet.rotation.z=Math.random()*6.28; pet.position.set(Math.cos(a)*r,0.2,Math.sin(a)*r); scene.add(pet);
   }
   for(let i=0;i<26;i++){ // glinting dewdrops
     const a=Math.random()*6.28,r=rnd(10,120);
     const d=new THREE.Mesh(new THREE.SphereGeometry(rnd(0.18,0.32),10,8),
-      new THREE.MeshStandardMaterial({color:0xcde6ff,transparent:true,opacity:0.7,roughness:0.05,metalness:0.1,emissive:0x335577,emissiveIntensity:0.25}));
+      new THREE.MeshStandardMaterial({color:0x88b8e8,transparent:true,opacity:0.75,roughness:0.05,metalness:0.1,emissive:0x224466,emissiveIntensity:0.35}));
     d.position.set(Math.cos(a)*r,rnd(0.5,2.6),Math.sin(a)*r); scene.add(d);
   }
 }
@@ -295,7 +297,7 @@ buildFlora();
 const ffTex=(function(){
   const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');
   const g=x.createRadialGradient(32,32,0,32,32,32);
-  g.addColorStop(0,'rgba(255,240,180,1)');g.addColorStop(.4,'rgba(255,224,130,.6)');g.addColorStop(1,'rgba(255,224,130,0)');
+  g.addColorStop(0,'rgba(255,210,80,1)');g.addColorStop(.4,'rgba(240,180,50,.7)');g.addColorStop(1,'rgba(240,180,50,0)');
   x.fillStyle=g;x.fillRect(0,0,64,64);const t=new THREE.CanvasTexture(c);return t;
 })();
 const ffN=90, ffPos=new Float32Array(ffN*3), ffPhase=[];
@@ -307,7 +309,7 @@ for(let i=0;i<ffN;i++){
 const ffGeo=new THREE.BufferGeometry();
 ffGeo.setAttribute('position',new THREE.BufferAttribute(ffPos,3));
 const fireflies=new THREE.Points(ffGeo,new THREE.PointsMaterial({
-  size:1.6,map:ffTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,color:0xffe9a8}));
+  size:1.6,map:ffTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,color:0xffc840}));
 scene.add(fireflies);
 
 // ============ DYNAMIC ENTITIES ============
@@ -325,7 +327,7 @@ function addFace(g,y,z,sep,r){
 }
 
 function addFeet(g,y,sep){
-  const fm=new THREE.MeshStandardMaterial({color:0xf3e6cf,roughness:0.85});
+  const fm=new THREE.MeshStandardMaterial({color:0xe0c8a0,roughness:0.85});
   [-1,1].forEach(s=>{ const f=new THREE.Mesh(new THREE.SphereGeometry(0.3,10,8),fm);
     f.scale.set(1,0.7,1.3); f.position.set(s*sep,y,0.25); f.castShadow=true; g.add(f); });
 }
@@ -337,17 +339,17 @@ function buildMushroomMesh(type){
   if(type==='akari'){
     // slim upright body + glowing lantern lure on top : face on the body front
     const body=new THREE.Mesh(new THREE.SphereGeometry(0.95,20,18),
-      new THREE.MeshStandardMaterial({color:0xfff1c4,emissive:0xffcf5a,emissiveIntensity:0.35,roughness:0.4}));
+      new THREE.MeshStandardMaterial({color:0xf0d878,emissive:0xe8a800,emissiveIntensity:0.45,roughness:0.4}));
     body.scale.set(1,1.45,1); body.position.y=1.7; body.castShadow=true; g.add(body);
     addFeet(g,0.35,0.45);
     const stalk=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.13,0.8,8),
-      new THREE.MeshStandardMaterial({color:0xe7d8a8,roughness:0.7}));
+      new THREE.MeshStandardMaterial({color:0xd0b870,roughness:0.7}));
     stalk.position.set(0.08,2.95,-0.1); stalk.rotation.z=0.22; g.add(stalk);
     const bulb=new THREE.Mesh(new THREE.SphereGeometry(0.5,18,14),
-      new THREE.MeshStandardMaterial({color:0xfff4c0,emissive:0xffce4d,emissiveIntensity:1.1,roughness:0.3}));
+      new THREE.MeshStandardMaterial({color:0xf0c840,emissive:0xe8a800,emissiveIntensity:1.2,roughness:0.3}));
     bulb.position.set(0.2,3.45,-0.1); g.add(bulb);
     const halo=new THREE.Mesh(new THREE.SphereGeometry(0.85,14,12),
-      new THREE.MeshBasicMaterial({color:0xffe08a,transparent:true,opacity:0.28,depthWrite:false}));
+      new THREE.MeshBasicMaterial({color:0xe8a830,transparent:true,opacity:0.32,depthWrite:false}));
     halo.position.set(0.2,3.45,-0.1); g.add(halo);
     addFace(g,1.95,0.9,0.3,0.2);
     const sm=new THREE.Mesh(new THREE.TorusGeometry(0.14,0.045,8,12,Math.PI),matEye);
@@ -362,13 +364,13 @@ function buildMushroomMesh(type){
     body.scale.set(1.15,1.0,1); body.position.y=1.35; body.castShadow=true; g.add(body);
     addFeet(g,0.55,0.32);
     [-1,1].forEach(s=>{ const a=new THREE.Mesh(new THREE.SphereGeometry(0.42,12,10),
-      new THREE.MeshStandardMaterial({color:0xf0855a,roughness:0.5}));
+      new THREE.MeshStandardMaterial({color:0xd85030,roughness:0.5}));
       a.position.set(s*1.55,1.15,0.25); a.castShadow=true; g.add(a); });
     const hat=new THREE.Mesh(new THREE.SphereGeometry(0.95,18,12,0,6.28,0,Math.PI*0.55),
-      new THREE.MeshStandardMaterial({color:0xe06a3e,roughness:0.55}));
+      new THREE.MeshStandardMaterial({color:0xc04818,roughness:0.55}));
     hat.scale.y=0.7; hat.position.set(0,2.2,-0.18); hat.rotation.x=-0.22; g.add(hat);
     const knob=new THREE.Mesh(new THREE.SphereGeometry(0.16,8,8),
-      new THREE.MeshStandardMaterial({color:0xfff0d0,roughness:0.6})); knob.position.set(0,2.62,-0.2); g.add(knob);
+      new THREE.MeshStandardMaterial({color:0xf0d8a8,roughness:0.6})); knob.position.set(0,2.62,-0.2); g.add(knob);
     [-1,1].forEach(s=>{ const b=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.13,0.12),matEye);
       b.position.set(s*0.36,1.82,1.18); b.rotation.z=-s*0.42; g.add(b); });
     addFace(g,1.52,1.22,0.37,0.24);
@@ -383,13 +385,13 @@ function buildMushroomMesh(type){
   body.scale.set(1,1.3,1); body.position.y=1.55; body.castShadow=true; g.add(body);
   addFeet(g,0.42,0.4);
   const hat=new THREE.Mesh(new THREE.SphereGeometry(0.95,18,12,0,6.28,0,Math.PI*0.6),
-    new THREE.MeshStandardMaterial({color:0xb07fe0,roughness:0.4}));
+    new THREE.MeshStandardMaterial({color:0x7028b0,roughness:0.4}));
   hat.scale.y=0.8; hat.position.y=2.55; g.add(hat);
-  const dripMat=new THREE.MeshStandardMaterial({color:0xa873d6,roughness:0.35,transparent:true,opacity:0.92});
+  const dripMat=new THREE.MeshStandardMaterial({color:0x8830c8,roughness:0.35,transparent:true,opacity:0.92});
   [3.4,4.1,4.7,5.3].forEach(a=>{ const d=new THREE.Mesh(new THREE.SphereGeometry(0.2,8,8),dripMat);
     d.scale.y=1.8; d.position.set(Math.cos(a)*0.8,2.32,Math.sin(a)*0.8); g.add(d); });
   const bub=new THREE.Mesh(new THREE.SphereGeometry(0.4,12,10),
-    new THREE.MeshStandardMaterial({color:0xe6cdf7,transparent:true,opacity:0.62,roughness:0.15}));
+    new THREE.MeshStandardMaterial({color:0xc898e8,transparent:true,opacity:0.68,roughness:0.15}));
   bub.position.y=3.15; g.add(bub); g.userData.bubble=bub;
   addFace(g,1.8,0.93,0.33,0.23);
   const sm=new THREE.Mesh(new THREE.TorusGeometry(0.19,0.05,8,12,Math.PI),matEye);
@@ -399,9 +401,10 @@ function buildMushroomMesh(type){
 
 function buildSpiritMesh(){
   const g=new THREE.Group();
-  const skin=new THREE.MeshStandardMaterial({color:0xffe6c4,roughness:0.6});
-  const cloth=new THREE.MeshStandardMaterial({color:0x6fae4e,roughness:0.7});
-  const cloth2=new THREE.MeshStandardMaterial({color:0x57913c,roughness:0.7});
+  const skin=new THREE.MeshStandardMaterial({color:0xfff4e0,roughness:0.55});
+  const cloth=new THREE.MeshStandardMaterial({color:0xfff0d8,emissive:0xffe8b8,emissiveIntensity:0.12,roughness:0.65});
+  const cloth2=new THREE.MeshStandardMaterial({color:0x286878,roughness:0.7});
+  const hoodMat=new THREE.MeshStandardMaterial({color:0x1a5060,emissive:0x184858,emissiveIntensity:0.08,roughness:0.65});
   // legs + feet
   [-1,1].forEach(s=>{
     const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,0.6,8),cloth2);
@@ -424,13 +427,13 @@ function buildSpiritMesh(){
   // head
   const head=new THREE.Mesh(new THREE.SphereGeometry(0.9,22,18),skin);
   head.position.y=2.92; head.castShadow=true; g.add(head);
-  // pointed leaf hood + glowing tip (keeps the "spore of light" motif)
-  const hat=new THREE.Mesh(new THREE.ConeGeometry(0.98,1.3,18),cloth);
+  // pointed hood + glowing tip (contrast with dark forest floor)
+  const hat=new THREE.Mesh(new THREE.ConeGeometry(0.98,1.3,18),hoodMat);
   hat.position.set(0,3.7,-0.05); hat.rotation.x=-0.16; hat.castShadow=true; g.add(hat);
   const brim=new THREE.Mesh(new THREE.TorusGeometry(0.78,0.12,8,20),cloth2);
   brim.rotation.x=Math.PI/2; brim.position.y=3.12; g.add(brim);
-  const hatTip=new THREE.Mesh(new THREE.SphereGeometry(0.17,10,10),
-    new THREE.MeshStandardMaterial({color:0xfff2c4,emissive:0xffd66a,emissiveIntensity:0.9,roughness:0.4}));
+  const hatTip=new THREE.Mesh(new THREE.SphereGeometry(0.22,10,10),
+    new THREE.MeshStandardMaterial({color:0xfff0c0,emissive:0xffd020,emissiveIntensity:1.4,roughness:0.35}));
   hatTip.position.set(0,4.32,-0.22); g.add(hatTip);
   // face
   const e1=new THREE.Mesh(new THREE.SphereGeometry(0.13,10,10),matEye); e1.position.set(-0.3,2.98,0.8);
@@ -439,12 +442,14 @@ function buildSpiritMesh(){
   const ch2=ch1.clone(); ch2.position.x=0.52; g.add(ch1,ch2);
   const sm=new THREE.Mesh(new THREE.TorusGeometry(0.12,0.04,8,12,Math.PI),matEye);
   sm.position.set(0,2.78,0.84); sm.rotation.z=Math.PI; g.add(sm);
-  // gentle aura + soft light (kept dim so it never blows out the scene)
-  const aura=new THREE.Mesh(new THREE.SphereGeometry(1.5,16,12),
-    new THREE.MeshBasicMaterial({color:0xffe8b0,transparent:true,opacity:0.08,depthWrite:false}));
+  const aura=new THREE.Mesh(new THREE.SphereGeometry(1.8,16,12),
+    new THREE.MeshBasicMaterial({color:0xfff0b0,transparent:true,opacity:0.18,depthWrite:false}));
   aura.position.y=2.6; g.add(aura);
-  const pl=new THREE.PointLight(0xffe6b0,0.4,20); pl.position.set(0,3.3,0.4); g.add(pl);
-  g.userData.eyes=[e1,e2];
+  const marker=new THREE.Mesh(new THREE.RingGeometry(0.85,1.4,28),
+    new THREE.MeshBasicMaterial({color:0xfff8d0,transparent:true,opacity:0.65,depthWrite:false,blending:THREE.AdditiveBlending}));
+  marker.rotation.x=-Math.PI/2; marker.position.y=0.22; g.add(marker);
+  const pl=new THREE.PointLight(0xfff0c0,0.85,22); pl.position.set(0,3.3,0.4); g.add(pl);
+  g.userData.eyes=[e1,e2]; g.userData.marker=marker;
   return g;
 }
 
@@ -452,10 +457,10 @@ function buildPatchMesh(type){
   const g=new THREE.Group();
   const ring=new THREE.Mesh(new THREE.TorusGeometry(2.4,0.28,10,28),
     new THREE.MeshStandardMaterial({color:COL3[type],emissive:COL3[type],emissiveIntensity:0.5,roughness:0.5}));
-  ring.rotation.x=-Math.PI/2; ring.position.y=0.15; g.add(ring);
+  ring.rotation.x=-Math.PI/2; ring.position.y=0.28; g.add(ring);
   const disc=new THREE.Mesh(new THREE.CircleGeometry(2.6,24),
-    new THREE.MeshStandardMaterial({color:0x3a3026,roughness:1}));
-  disc.rotation.x=-Math.PI/2; disc.position.y=0.05; disc.userData={kind:'patch'}; g.add(disc);
+    new THREE.MeshStandardMaterial({color:0x2a2218,roughness:1}));
+  disc.rotation.x=-Math.PI/2; disc.position.y=0.18; disc.userData={kind:'patch'}; g.add(disc);
   g.userData.disc=disc;
   // buds
   for(let i=0;i<3;i++){
@@ -469,10 +474,10 @@ function buildPatchMesh(type){
 function buildFruitMesh(){
   const g=new THREE.Group();
   const core=new THREE.Mesh(new THREE.SphereGeometry(1.1,18,14),
-    new THREE.MeshStandardMaterial({color:0xfff2c0,emissive:0xffcf55,emissiveIntensity:0.9,roughness:0.3}));
+    new THREE.MeshStandardMaterial({color:0xf0c840,emissive:0xe8a800,emissiveIntensity:1.0,roughness:0.3}));
   core.userData={kind:'fruit'}; g.add(core);
   const glow=new THREE.Mesh(new THREE.SphereGeometry(2.2,16,12),
-    new THREE.MeshBasicMaterial({color:0xffe08a,transparent:true,opacity:0.2,depthWrite:false}));
+    new THREE.MeshBasicMaterial({color:0xe8a830,transparent:true,opacity:0.24,depthWrite:false}));
   g.add(glow);
   g.userData.core=core;
   return g;
@@ -480,7 +485,7 @@ function buildFruitMesh(){
 
 function buildFogMesh(){
   const g=new THREE.Group();
-  const mat=new THREE.MeshStandardMaterial({color:0x9aa6ad,transparent:true,opacity:0.66,
+  const mat=new THREE.MeshStandardMaterial({color:0x6a7880,transparent:true,opacity:0.72,
     roughness:1,emissive:0x000000,emissiveIntensity:0,depthWrite:false});
   g.userData.mats=[];
   for(let i=0;i<7;i++){
@@ -493,7 +498,7 @@ function buildFogMesh(){
 
 function buildVineMesh(){
   const g=new THREE.Group();
-  const vm=new THREE.MeshStandardMaterial({color:0x4e7a3f,roughness:0.85});
+  const vm=new THREE.MeshStandardMaterial({color:0x2d5028,roughness:0.85});
   for(let i=-1;i<=1;i++){
     const c=new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.6,9,8),vm);
     c.position.set(i*1.8,4.5,0); c.rotation.z=i*0.15; c.castShadow=true;
@@ -501,7 +506,7 @@ function buildVineMesh(){
   }
   for(let i=0;i<8;i++){
     const l=new THREE.Mesh(new THREE.SphereGeometry(0.7,8,6),
-      new THREE.MeshStandardMaterial({color:0x6fae5e,roughness:0.8}));
+      new THREE.MeshStandardMaterial({color:0x458838,roughness:0.8}));
     l.scale.set(1,0.4,1.4); l.position.set(rnd(-2.5,2.5),rnd(1,8),rnd(-1,1)); g.add(l);
   }
   g.userData.mat=vm;
@@ -514,9 +519,9 @@ function buildNestMesh(){
     new THREE.MeshStandardMaterial({color:0x6b4a30,roughness:1}));
   mound.scale.y=0.5; g.add(mound);
   const core=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),
-    new THREE.MeshStandardMaterial({color:0xfff6d8,emissive:0xffd66a,emissiveIntensity:1}));
+    new THREE.MeshStandardMaterial({color:0xf0d878,emissive:0xe8a800,emissiveIntensity:1.1}));
   core.position.y=1.4; g.add(core);
-  const pl=new THREE.PointLight(0xffd87a,0.6,18); pl.position.y=2; g.add(pl);
+  const pl=new THREE.PointLight(0xe8a830,0.65,18); pl.position.y=2; g.add(pl);
   g.userData.core=core; g.userData.light=pl; g.userData.sprouts=[];
   return g;
 }
@@ -584,8 +589,8 @@ function spawnMushroom(type,x,z){
   if(state.mushrooms.length>=20){toast('キノコびとが いっぱいです');return;}
   const mesh=buildMushroomMesh(type); mesh.position.set(x,0,z); dyn.add(mesh);
   const glowDisc=new THREE.Mesh(new THREE.CircleGeometry(1.5,24),
-    new THREE.MeshBasicMaterial({color:COL3[type],transparent:true,opacity:0.32,depthWrite:false,blending:THREE.AdditiveBlending}));
-  glowDisc.rotation.x=-Math.PI/2; glowDisc.position.set(x,0.06,z); dyn.add(glowDisc);
+    new THREE.MeshBasicMaterial({color:COL3[type],transparent:true,opacity:0.38,depthWrite:false,blending:THREE.AdditiveBlending}));
+  glowDisc.rotation.x=-Math.PI/2; glowDisc.position.set(x,0.22,z); dyn.add(glowDisc);
   state.mushrooms.push({id:mid++,type,x,z,mesh,glowDisc,
     st:'follow',target:null,role:null,
     ox:rnd(-4,4),oz:rnd(-4,4),wob:Math.random()*6.28,phase:Math.random()*6.28,
@@ -689,6 +694,9 @@ function update(dt){
   sp.bob=Math.sin(tG*2.5)*0.25;
   sp.mesh.position.set(sp.x,sp.bob,sp.z);
   sp.mesh.rotation.y=orbit.theta;
+  if(sp.mesh.userData.marker){
+    sp.mesh.userData.marker.material.opacity=0.5+Math.abs(Math.sin(tG*3))*0.2;
+  }
   const mvx=sp.x-sp.px, mvz=sp.z-sp.pz;
   if(Math.hypot(mvx,mvz)>0.02){ sp.heading=Math.atan2(mvx,mvz); }
   sp.px=sp.x; sp.pz=sp.z;
@@ -724,14 +732,14 @@ function update(dt){
       if(arrived){ if(m.role==='fruit'){m.st='carrying';m.carry=t;} else {m.st='working';m.work=0;} m.hop=0.25; }
     } else if(m.st==='working'){
       m.work+=dt;
-      if(Math.random()<dt*5) sparkle(m.target.x+rnd(-3,3),rnd(3,6),m.target.z+rnd(-3,3), m.role==='fog'?0xdfeaf0:COL3.tokashi,1);
+      if(Math.random()<dt*5) sparkle(m.target.x+rnd(-3,3),rnd(3,6),m.target.z+rnd(-3,3), m.role==='fog'?0xa8b8c0:COL3.tokashi,1);
       if(m.role==='fog'){
         const f=m.target; f.clearing+=dt; f.a=Math.max(0,1-f.clearing/2.4);
         f.mesh.userData.mats.forEach(mt=>mt.opacity=0.72*f.a);
         f.mesh.scale.setScalar(Math.max(0.2,f.a));
         if(f.a<=0.03){ f.a=0; f.mesh.visible=false;
           for(const idx of f.reveal){ state.fruits[idx].revealed=true; state.fruits[idx].mesh.visible=true; }
-          sparkle(f.x,4,f.z,0xfff3c4,18); toast('霧が晴れて、ひかりの実が あらわれた');
+          sparkle(f.x,4,f.z,0xf0c840,18); toast('霧が晴れて、ひかりの実が あらわれた');
           m.st='follow';m.target=null;m.role=null; }
       } else if(m.role==='vine'){
         const v=m.target; v.hp-=dt/2.6;
@@ -747,13 +755,13 @@ function update(dt){
       const arrived=moveTo(m,state.nest.x+rnd(-2,2),state.nest.z-3,18,dt);
       if(arrived){
         fr.done=true; fr.carried=false; fr.mesh.visible=false;
-        state.fruitCount++; sparkle(state.nest.x,2,state.nest.z,0xffe082,22);
+        state.fruitCount++; sparkle(state.nest.x,2,state.nest.z,0xe8a830,22);
         m.carry=null; m.st='follow'; m.role=null; updateHUD();
         // grow nest
         const nm=state.nest.mesh, prog=state.fruitCount/state.goal;
         nm.userData.core.scale.setScalar(1+prog*2.2);
         nm.userData.light.intensity=0.6+prog*1.6;
-        const sprout=new THREE.Mesh(new THREE.ConeGeometry(0.3,1.6,6),new THREE.MeshStandardMaterial({color:0xa7d8a0,roughness:0.7}));
+        const sprout=new THREE.Mesh(new THREE.ConeGeometry(0.3,1.6,6),new THREE.MeshStandardMaterial({color:0x528a3e,roughness:0.7}));
         const a=rnd(0,6.28); sprout.position.set(Math.cos(a)*2.5,1.2,Math.sin(a)*2.5); sprout.rotation.z=rnd(-0.3,0.3); nm.add(sprout);
         if(state.fruitCount>=state.goal){ win(); }
         else { const left=state.goal-state.fruitCount; toast(left===1?'あと ひとつ…':'ひかりの実を 苗床へ ('+state.fruitCount+'/'+state.goal+')'); }
@@ -769,7 +777,7 @@ function update(dt){
     // blink
     const eyeScale=m.blinkT<0.1?0.2:1;
     const eyes=m.mesh.userData.eyes; if(eyes){ eyes[0].scale.y=eyeScale; eyes[1].scale.y=eyeScale; }
-    if(m.glowDisc){ m.glowDisc.position.set(m.x,0.06,m.z); m.glowDisc.material.opacity=0.22+Math.abs(Math.sin(m.phase))*0.14; }
+    if(m.glowDisc){ m.glowDisc.position.set(m.x,0.22,m.z); m.glowDisc.material.opacity=0.22+Math.abs(Math.sin(m.phase))*0.14; }
   }
 
   // sparkles
@@ -781,7 +789,7 @@ function update(dt){
   }
 
   // patch ring pulse
-  for(const pa of state.patches){ const ring=pa.mesh.children[0]; ring.position.y=0.15+Math.sin(tG*2+pa.x)*0.05; ring.material.emissiveIntensity=pa.cool>0?0.2:0.5; }
+  for(const pa of state.patches){ const ring=pa.mesh.children[0]; ring.position.y=0.28+Math.sin(tG*2+pa.x)*0.04; ring.material.emissiveIntensity=pa.cool>0?0.2:0.5; }
   // fruit float
   for(const fr of state.fruits){ if(fr.mesh.visible&&!fr.carried) fr.mesh.position.y=2.2+Math.sin(tG*2+fr.x)*0.3; }
 }
