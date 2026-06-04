@@ -35,8 +35,9 @@
   .dot{width:13px;height:13px;border-radius:50%;display:inline-block;}
   .grow{flex:1;}
   #fruitPill{font-family:'Mochiy Pop One';color:var(--gold);}
-  #mute{pointer-events:auto;cursor:pointer;background:var(--panel);border:1px solid rgba(255,255,255,.08);
+  #mute,#viewBtn{pointer-events:auto;cursor:pointer;background:var(--panel);border:1px solid rgba(255,255,255,.08);
     border-radius:999px;width:38px;height:38px;color:var(--ink);font-size:16px;}
+  #viewBtn{font-size:13px;font-family:'Mochiy Pop One';}
   #hint{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:3;
     background:var(--panel);backdrop-filter:blur(6px);padding:8px 16px;border-radius:999px;
     font-size:13px;color:var(--ink-soft);white-space:nowrap;pointer-events:none;
@@ -76,9 +77,10 @@
       <div class="pill"><span class="dot" style="background:var(--tokashi)"></span><span id="cTokashi">0</span></div>
       <div class="grow"></div>
       <div class="pill" id="fruitPill">&#10022; <span id="cFruit">0</span>/<span id="cGoal">5</span></div>
+      <button id="viewBtn" title="視点切替 (V)">見</button>
       <button id="mute" title="おと">&#9834;</button>
     </div>
-    <div id="hint">クリックで移動・お手伝い / ドラッグで見回す / 森のおくを探索しよう</div>
+    <div id="hint"></div>
     <div id="toast"></div>
 
     <div class="overlay" id="startScreen">
@@ -127,9 +129,25 @@ scene.background=new THREE.Color(0x1a3216);
 scene.fog=new THREE.Fog(0x243820,85,235);
 
 const camera=new THREE.PerspectiveCamera(44,1,0.1,500);
-// orbit camera follows the spirit; drag rotates, wheel zooms
 const orbit={target:new THREE.Vector3(0,2.6,14),radius:50,theta:0,phi:1.28};
+const fp={yaw:0,pitch:0,eyeY:3.15};
+let viewMode='orbit';
+
+function spiritBob(){
+  return running&&state?Math.sin(tG*2.5)*0.25:0;
+}
 function applyCamera(t){
+  if(viewMode==='first'&&state&&state.spirit){
+    const s=state.spirit, bob=spiritBob();
+    const cy=Math.cos(fp.pitch), sy=Math.sin(fp.pitch);
+    camera.position.set(s.x, bob+fp.eyeY, s.z);
+    camera.lookAt(
+      s.x+Math.sin(fp.yaw)*cy*80,
+      bob+fp.eyeY+sy*80,
+      s.z+Math.cos(fp.yaw)*cy*80
+    );
+    return;
+  }
   const sp=Math.sin(orbit.phi),cp=Math.cos(orbit.phi);
   camera.position.set(
     orbit.target.x+orbit.radius*sp*Math.sin(orbit.theta),
@@ -138,7 +156,34 @@ function applyCamera(t){
   );
   camera.lookAt(orbit.target);
 }
-applyCamera(0);
+function setSpiritVisible(v){
+  if(state&&state.spirit&&state.spirit.mesh) state.spirit.mesh.visible=v;
+}
+function setViewMode(mode){
+  if(viewMode===mode) return;
+  if(mode==='first'){
+    fp.yaw=orbit.theta; fp.pitch=0;
+    setSpiritVisible(false);
+  } else {
+    orbit.theta=fp.yaw;
+    setSpiritVisible(true);
+  }
+  viewMode=mode;
+  const btn=document.getElementById('viewBtn');
+  if(btn){ btn.textContent=mode==='first'?'外':'見'; btn.title=mode==='first'?'見下ろし視点 (V)':'一人称 (V)'; }
+  updateHint();
+}
+function toggleView(){ setViewMode(viewMode==='orbit'?'first':'orbit'); }
+function updateHint(){
+  const touch='ontouchstart' in window;
+  const tap=touch?'タップ':'クリック';
+  const drag=touch?'スワイプ':'ドラッグ';
+  let msg=tap+'で移動・お手伝い / '+drag+'で見回す';
+  if(viewMode==='orbit') msg+=' / ホイールでズーム';
+  msg+=' / 視点ボタンで切替';
+  document.getElementById('hint').textContent=msg;
+}
+applyCamera(0); updateHint();
 
 function resize(){
   const w=stage.clientWidth,h=stage.clientHeight;
@@ -664,21 +709,47 @@ function gameClick(e){
     state.spirit.tx=x; state.spirit.tz=z;
   }
 }
+const LOOK_SENS=0.0032;
+let dragOn=false,moved=false,lx=0,ly=0,sx=0,sy=0,activePointer=null;
+function onDown(e){
+  if(e.button!==undefined&&e.button!==0) return;
+  dragOn=true; moved=false; activePointer=e.pointerId;
+  lx=sx=e.clientX; ly=sy=e.clientY;
+  try{ renderer.domElement.setPointerCapture(e.pointerId); }catch(err){}
+}
+function onMove(e){
+  if(!dragOn||e.pointerId!==activePointer) return;
+  const dx=e.clientX-lx, dy=e.clientY-ly;
+  lx=e.clientX; ly=e.clientY;
+  if(Math.hypot(e.clientX-sx,e.clientY-sy)>6) moved=true;
+  if(viewMode==='first'){
+    fp.yaw-=dx*LOOK_SENS;
+    fp.pitch=Math.max(-0.55,Math.min(0.42,fp.pitch-dy*LOOK_SENS));
+  } else {
+    orbit.theta-=dx*LOOK_SENS;
+    orbit.phi=Math.max(0.55,Math.min(1.5,orbit.phi-dy*LOOK_SENS));
+  }
+}
+function onUp(e){
+  if(e.pointerId!==activePointer) return;
+  try{ renderer.domElement.releasePointerCapture(e.pointerId); }catch(err){}
+  if(dragOn&&!moved) gameClick(e);
+  dragOn=false; activePointer=null;
+}
 renderer.domElement.addEventListener('pointerdown',onDown);
-let dragOn=false,moved=false,lx=0,ly=0,sx=0,sy=0;
-function onDown(e){ dragOn=true;moved=false;lx=sx=e.clientX;ly=sy=e.clientY; }
-window.addEventListener('pointermove',e=>{
-  if(!dragOn)return;
-  const dx=e.clientX-lx,dy=e.clientY-ly; lx=e.clientX;ly=e.clientY;
-  if(Math.hypot(e.clientX-sx,e.clientY-sy)>6)moved=true;
-  orbit.theta-=dx*0.005;
-  orbit.phi=Math.max(0.55,Math.min(1.5,orbit.phi-dy*0.005));
-});
-window.addEventListener('pointerup',e=>{ if(dragOn&&!moved)gameClick(e); dragOn=false; });
+renderer.domElement.addEventListener('pointermove',onMove);
+renderer.domElement.addEventListener('pointerup',onUp);
+renderer.domElement.addEventListener('pointercancel',onUp);
 renderer.domElement.addEventListener('wheel',e=>{
+  if(viewMode!=='orbit') return;
   e.preventDefault();
   orbit.radius=Math.max(18,Math.min(72,orbit.radius+Math.sign(e.deltaY)*3));
 },{passive:false});
+document.getElementById('viewBtn').onclick=toggleView;
+window.addEventListener('keydown',e=>{
+  if(e.repeat) return;
+  if(e.key==='v'||e.key==='V') toggleView();
+});
 
 // ---------- update ----------
 function moveTo(e,tx,tz,sp,dt){
@@ -693,25 +764,33 @@ function update(dt){
   moveTo(sp,sp.tx,sp.tz,24,dt);
   sp.bob=Math.sin(tG*2.5)*0.25;
   sp.mesh.position.set(sp.x,sp.bob,sp.z);
-  sp.mesh.rotation.y=orbit.theta;
+  const mvx=sp.x-sp.px, mvz=sp.z-sp.pz;
+  const moving=Math.hypot(mvx,mvz)>0.02;
+  if(moving) sp.heading=Math.atan2(mvx,mvz);
+  if(viewMode==='first'){
+    sp.mesh.rotation.y=moving?sp.heading:fp.yaw;
+    if(moving) fp.yaw=sp.heading;
+  } else {
+    sp.mesh.rotation.y=orbit.theta;
+  }
   if(sp.mesh.userData.marker){
     sp.mesh.userData.marker.material.opacity=0.5+Math.abs(Math.sin(tG*3))*0.2;
   }
-  const mvx=sp.x-sp.px, mvz=sp.z-sp.pz;
-  if(Math.hypot(mvx,mvz)>0.02){ sp.heading=Math.atan2(mvx,mvz); }
   sp.px=sp.x; sp.pz=sp.z;
 
   for(const pa of state.patches){ if(pa.cool>0)pa.cool-=dt; }
 
   // tidy formation: following mushrooms line up in rows/ranks behind the leader
   const followers=state.mushrooms.filter(m=>m.st==='follow').sort((a,b)=>a.id-b.id);
-  const fhx=Math.sin(sp.heading), fhz=Math.cos(sp.heading);
-  const rhx=Math.cos(sp.heading), rhz=-Math.sin(sp.heading);
-  const perRow=5, gapX=2.0, gapZ=2.0;
+  const fpForm=viewMode==='first';
+  const formYaw=fpForm?(moving?sp.heading:fp.yaw):sp.heading;
+  const fhx=Math.sin(formYaw), fhz=Math.cos(formYaw);
+  const rhx=Math.cos(formYaw), rhz=-Math.sin(formYaw);
+  const perRow=fpForm?4:5, gapX=fpForm?3.2:2.0, gapZ=fpForm?3.5:2.0, baseOff=fpForm?6.5:2.6;
   followers.forEach((m,i)=>{
     const row=Math.floor(i/perRow), col=i%perRow;
     const n=Math.min(perRow,followers.length-row*perRow);
-    const ro=2.6+row*gapZ, co=(col-(n-1)/2)*gapX;
+    const ro=baseOff+row*gapZ, co=(col-(n-1)/2)*gapX;
     m.slotX=sp.x-fhx*ro+rhx*co; m.slotZ=sp.z-fhz*ro+rhz*co;
   });
 
@@ -838,6 +917,7 @@ resize(); buildDynamic(); requestAnimationFrame(loop);
 // ---------- flow ----------
 function startGame(){
   buildDynamic(); running=true;
+  setViewMode('orbit');
   document.getElementById('startScreen').classList.add('hidden');
   document.getElementById('endScreen').classList.add('hidden');
   startAudio();
